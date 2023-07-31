@@ -7,62 +7,64 @@
 </head>
 <body>
     <h1>Budget / FTE Table</h1>
-    <table>
-        <tr>
-            <th>KAM</th>
-            <th>Client</th>
-            <th>Project</th> <!-- New column for "Project" -->
-            <th>Group</th> <!-- New column for "Group" -->
-            {% for month in months %}
-            <th>{{ month }}</th>
-            {% endfor %}
-            <th>Total</th>
-        </tr>
-        {% for _ in range(30) %}
-        <tr>
-            <td>
-                <select class="kam-dropdown" data-row="{{ loop.index }}">
-                    <option value="" selected>Select KAM</option>
-                    {% for kam in kams %}
-                    <option value="{{ kam.id }}">{{ kam.name }}</option>
-                    {% endfor %}
-                </select>
-            </td>
-            <td>
-                <div class="client-wrapper">
-                    <select class="client-dropdown" data-row="{{ loop.index }}" data-client-id="">
-                        <option value="" selected>Select Client</option>
+    <div class="scrollable-table-wrapper">
+        <table>
+            <tr>
+                <th class="kam-column">KAM</th>
+                <th class="client-column">Client</th>
+                <th class="project-column">Project</th> <!-- New column for "Project" -->
+                <th class="group-column">Group</th> <!-- New column for "Group" -->
+                {% for month in months %}
+                <th class="month">{{ month }}</th>
+                {% endfor %}
+                <th>Total</th>
+            </tr>
+            {% for _ in range(30) %}
+            <tr>
+                <td>
+                    <select class="kam-dropdown" data-row="{{ loop.index }}">
+                        <option value="" selected>Select KAM</option>
+                        {% for kam in kams %}
+                        <option value="{{ kam.id }}">{{ kam.name }}</option>
+                        {% endfor %}
                     </select>
-                    <input type="text" class="client-input" style="display: none;" placeholder="Enter Client Name">
-                </div>
-            </td>
-            <td>
-                <input type="text" class="project-input" data-row="{{ loop.index }}" style="display: inline;" placeholder="Enter Project Name">
-            </td>
-            <td>
-                <select class="group-dropdown" data-row="{{ loop.index }}">
-                    <option value="" selected>Select Group</option>
-                    {% for group in groups %}
-                    <option value="{{ group.id }}">{{ group.group }}</option>
-                    {% endfor %}
-                </select>
-            </td>
-            {% for month in months %}
-            <td>
-                <input type="text" class="plan-input" data-client="" data-project="" data-month="{{ loop.index }}" value="" placeholder="Enter FTE count">
-            </td>
+                </td>
+                <td>
+                    <div class="client-wrapper">
+                        <select class="client-dropdown" data-row="{{ loop.index }}" data-client-id="">
+                            <option value="" selected>Select Client</option>
+                        </select>
+                        <input type="text" class="client-input" style="display: none;" placeholder="Enter Client Name">
+                    </div>
+                </td>
+                <td>
+                    <input type="text" class="project-input" data-row="{{ loop.index }}" style="display: inline;" placeholder="Enter Project Name">
+                </td>
+                <td>
+                    <select class="group-dropdown" data-row="{{ loop.index }}">
+                        <option value="" selected>Select Group</option>
+                        {% for group in groups %}
+                        <option value="{{ group.id }}">{{ group.group }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                {% for month in months %}
+                <td>
+                    <input type="text" class="plan-input" data-client="" data-project="" data-month="{{ loop.index - 3 }}" value="" placeholder="FTE count">
+                </td>
+                {% endfor %}
+                <td class="total-row">0</td>
+            </tr>
             {% endfor %}
-            <td class="total-row">0</td>
-        </tr>
-        {% endfor %}
-        <tr>
-            <td>Total</td>
-            {% for _ in range(12) %}
-            <td class="total-column">0</td>
-            {% endfor %}
-            <td class="grand-total">0</td>
-        </tr>
-    </table>
+            <tr>
+                <th colspan="4">Total</th>
+                {% for _ in range(12) %}
+                <td class="total-column">0</td>
+                {% endfor %}
+                <td class="grand-total">0</td>
+            </tr>
+        </table>
+    </div>
 
     <script>
         function updateTotals() {
@@ -77,12 +79,12 @@
                 const planInputs = parentRow.querySelectorAll(".plan-input");
                 let total = 0;
                 planInputs.forEach(input => {
-                    const value = parseInt(input.value);
+                    const value = parseFloat(input.value);
                     if (!isNaN(value)) {
                         total += value;
                     }
                 });
-                cell.textContent = total;
+                cell.textContent = total.toFixed(1);
             });
         }
 
@@ -92,23 +94,23 @@
                 const planInputs = document.querySelectorAll(`.plan-input[data-month="${columnIndex - 2}"]`);
                 let total = 0;
                 planInputs.forEach(input => {
-                    const value = parseInt(input.value);
+                    const value = parseFloat(input.value);
                     if (!isNaN(value)) {
                         total += value;
                     }
                 });
-                cell.textContent = total;
+                cell.textContent = total.toFixed(1);
             });
 
             const grandTotalCell = document.querySelector(".grand-total");
             let grandTotal = 0;
             totalColumnCells.forEach(cell => {
-                const total = parseInt(cell.textContent);
+                const total = parseFloat(cell.textContent);
                 if (!isNaN(total)) {
                     grandTotal += total;
                 }
             });
-            grandTotalCell.textContent = grandTotal;
+            grandTotalCell.textContent = grandTotal.toFixed(1);
         }
 
         const kamDropdowns = document.querySelectorAll(".kam-dropdown");
