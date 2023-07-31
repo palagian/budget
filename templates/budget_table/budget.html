@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Budget Table</title>
+</head>
+<body>
+    <h1>Budget / FTE Table</h1>
+    <table>
+        <tr>
+            <th>KAM</th>
+            <th>Client</th>
+            <th>Project</th> <!-- New column for "Project" -->
+            <th>Group</th> <!-- New column for "Group" -->
+            {% for month in months %}
+            <th>{{ month }}</th>
+            {% endfor %}
+            <th>Total</th>
+        </tr>
+        {% for _ in range(30) %}
+        <tr>
+            <td>
+                <select class="kam-dropdown" data-row="{{ loop.index }}">
+                    <option value="" selected>Select KAM</option>
+                    {% for kam in kams %}
+                    <option value="{{ kam.id }}">{{ kam.name }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <div class="client-wrapper">
+                    <select class="client-dropdown" data-row="{{ loop.index }}" data-client-id="">
+                        <option value="" selected>Select Client</option>
+                    </select>
+                    <input type="text" class="client-input" style="display: none;" placeholder="Enter Client Name">
+                </div>
+            </td>
+            <td>
+                <input type="text" class="project-input" data-row="{{ loop.index }}" style="display: inline;" placeholder="Enter Project Name">
+            </td>
+            <td>
+                <select class="group-dropdown" data-row="{{ loop.index }}">
+                    <option value="" selected>Select Group</option>
+                    {% for group in groups %}
+                    <option value="{{ group.id }}">{{ group.group }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            {% for month in months %}
+            <td>
+                <input type="text" class="plan-input" data-client="" data-project="" data-month="{{ loop.index }}" value="" placeholder="Enter FTE count">
+            </td>
+            {% endfor %}
+            <td class="total-row">0</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td>Total</td>
+            {% for _ in range(12) %}
+            <td class="total-column">0</td>
+            {% endfor %}
+            <td class="grand-total">0</td>
+        </tr>
+    </table>
+
+    <script>
+        function updateTotals() {
+            updateRowTotals();
+            updateColumnTotals();
+        }
+
+        function updateRowTotals() {
+            const totalRowCells = document.querySelectorAll(".total-row");
+            totalRowCells.forEach(cell => {
+                const parentRow = cell.parentNode;
+                const planInputs = parentRow.querySelectorAll(".plan-input");
+                let total = 0;
+                planInputs.forEach(input => {
+                    const value = parseInt(input.value);
+                    if (!isNaN(value)) {
+                        total += value;
+                    }
+                });
+                cell.textContent = total;
+            });
+        }
+
+        function updateColumnTotals() {
+            const totalColumnCells = document.querySelectorAll(".total-column");
+            totalColumnCells.forEach((cell, columnIndex) => {
+                const planInputs = document.querySelectorAll(`.plan-input[data-month="${columnIndex - 2}"]`);
+                let total = 0;
+                planInputs.forEach(input => {
+                    const value = parseInt(input.value);
+                    if (!isNaN(value)) {
+                        total += value;
+                    }
+                });
+                cell.textContent = total;
+            });
+
+            const grandTotalCell = document.querySelector(".grand-total");
+            let grandTotal = 0;
+            totalColumnCells.forEach(cell => {
+                const total = parseInt(cell.textContent);
+                if (!isNaN(total)) {
+                    grandTotal += total;
+                }
+            });
+            grandTotalCell.textContent = grandTotal;
+        }
+
+        const kamDropdowns = document.querySelectorAll(".kam-dropdown");
+        kamDropdowns.forEach(dropdown => {
+            dropdown.addEventListener("change", function () {
+                const selectedKAM = this.value;
+                const rowNumber = this.getAttribute("data-row");
+                const clientDropdown = document.querySelector(`.client-dropdown[data-row="${rowNumber}"]`);
+                const clientInput = document.querySelector(`.client-input[data-row="${rowNumber}"]`);
+                updateClientDropdownOptions(clientDropdown, clientInput, selectedKAM);
+                updateTotals();
+            });
+        });
+
+        const planInputs = document.querySelectorAll(".plan-input");
+        planInputs.forEach(input => {
+            input.addEventListener("change", function () {
+                updateTotals();
+            });
+        });
+
+        const projectInputs = document.querySelectorAll(".project-input");
+        projectInputs.forEach(input => {
+            input.addEventListener("input", function () {
+                const rowNumber = this.getAttribute("data-row");
+                const projectValue = this.value;
+                const projectDropdown = document.querySelector(`.project-dropdown[data-row="${rowNumber}"]`);
+                projectDropdown.value = projectValue;
+                updateTotals();
+            });
+        });
+
+        const clientDropdowns = document.querySelectorAll(".client-dropdown");
+        clientDropdowns.forEach(dropdown => {
+            dropdown.addEventListener("change", function () {
+                const selectedValue = this.value;
+                const clientInput = this.parentNode.querySelector(".client-input");
+                if (selectedValue === "0") {
+                    this.style.display = "none";
+                    clientInput.style.display = "inline";
+                    clientInput.value = "";
+                    clientInput.focus();
+                } else {
+                    clientInput.style.display = "none";
+                    this.style.display = "inline";
+                }
+            });
+        });
+
+        function updateClientDropdownOptions(clientDropdown, clientInput, selectedKAM) {
+            fetch(`/get_clients_for_kam/${selectedKAM}`)
+                .then(response => response.json())
+                .then(data => {
+                    clientDropdown.innerHTML = '<option value="" selected>Select Client</option>';
+                    data.forEach(option => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = option.id;
+                        optionElement.textContent = option.name;
+                        clientDropdown.appendChild(optionElement);
+                    });
+                    const otherClientOption = document.createElement('option');
+                    otherClientOption.value = '0';
+                    otherClientOption.textContent = 'Other Client';
+                    clientDropdown.appendChild(otherClientOption);
+                })
+                .catch(error => {
+                    console.error('Error fetching clients:', error);
+                });
+        }
+
+        // Call the updateTotals function when the page loads to initialize the totals
+        updateTotals();
+    </script>
+</body>
+</html>
