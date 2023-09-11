@@ -12,20 +12,24 @@ body {
     font-weight: bold;
     text-align: center;
     background-color: #84a7cb;
+    font-size: 14px;
 }
 
 .total-cell {
     text-align: center;
+    font-size: 14px;
 }
 
 td {
     background-color: white;
     text-align: center;
     border: 1px solid #ccc;
+    font-size: 14px;
 }
 
 th {
     background-color: #84a7cb;
+    font-size: 14px;
 }
 
 .plan-input {
@@ -61,7 +65,7 @@ input::placeholder {
     width: 200px;
 }
 
-.kam-dropdown, .client-dropdown, .group-dropdown {
+.kam-dropdown, .client-dropdown, .group-dropdown, .project-dropdown {
     width: 100%;
     border: 1px solid #ccc;
     color: #575151;

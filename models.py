@@ -4,6 +4,7 @@ from app import db
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    projects = db.relationship('Project', secondary='client_project_association', lazy='subquery', backref=db.backref('clients', lazy=True))
 
 
 class Plan(db.Model):
@@ -32,6 +33,17 @@ class KAMClientAssociation(db.Model):
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+
+
+class ClientProjectAssociation(db.Model):
+    __tablename__ = 'client_project_association'
+
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+
+    client = db.relationship('Client', backref=db.backref('project_associations', lazy=True))
+    project = db.relationship('Project', backref=db.backref('client_associations', lazy=True))
 
 
 class FTE_price(db.Model):
