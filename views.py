@@ -46,4 +46,3 @@ def get_projects_for_client(client_id):
     print("Projects:", project_options)
 
     return jsonify(project_options)
-
